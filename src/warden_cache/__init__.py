@@ -6,6 +6,10 @@ from .keys import (
     format_query_cache_key,
     normalize_query,
 )
+from .singleflight import (
+    SingleFlightCoordinator,
+    UNLOCK_LUA_SCRIPT,
+)
 from .xfetch import (
     CacheEnvelope,
     compute_xfetch_delta,
@@ -21,4 +25,6 @@ __all__ = [
     "compute_xfetch_delta",
     "should_refresh_early",
     "CacheEnvelope",
+    "SingleFlightCoordinator",
+    "UNLOCK_LUA_SCRIPT",
 ]
