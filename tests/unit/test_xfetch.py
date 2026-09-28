@@ -10,6 +10,7 @@ def test_xfetch_delta_computation_deterministic():
     delta = compute_xfetch_delta(delta_t=1.0, beta=1.0, u_rand=0.5)
     assert pytest.approx(delta, 0.001) == 0.6931
 
+
 def test_xfetch_boundary_zero_and_negative_inputs():
     # Review Focus 1: U=0 clamp, delta_t <= 0 clamp
     delta_u_zero = compute_xfetch_delta(delta_t=1.0, beta=1.0, u_rand=0.0)
@@ -20,6 +21,7 @@ def test_xfetch_boundary_zero_and_negative_inputs():
 
     delta_zero_t = compute_xfetch_delta(delta_t=0.0, beta=1.0, u_rand=0.5)
     assert delta_zero_t == 0.0
+
 
 def test_should_refresh_early_decision():
     now = time.time()
@@ -32,6 +34,7 @@ def test_should_refresh_early_decision():
     # Near-expiry condition with large computation time triggers refresh early
     # (now - delta) > expiry where delta is huge
     assert should_refresh_early(expiry_epoch=now + 1, delta_t=10.0, beta=5.0, current_epoch=now)
+
 
 def test_cache_envelope_serialization():
     env = CacheEnvelope(

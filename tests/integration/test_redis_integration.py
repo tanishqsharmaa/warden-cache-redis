@@ -56,6 +56,7 @@ async def test_thundering_herd_simulation_50_workers(redis_client):
     assert cached_after.answer == "12 weeks of paid leave."
     assert should_refresh is False
 
+
 @pytest.mark.asyncio
 async def test_xfetch_early_refresh_flow(redis_client):
     """Verify XFetch detects when near-expiry items warrant background refresh."""
@@ -78,6 +79,7 @@ async def test_xfetch_early_refresh_flow(redis_client):
     # Because remaining TTL <= 1s and delta_t = 5s, early refresh probability is near 100%
     assert should_refresh is True
 
+
 @pytest.mark.asyncio
 async def test_cache_invalidation_end_to_end(redis_client):
     """Verify that emitting invalidation for 'Employee' purges only Employee cache keys."""
@@ -95,12 +97,14 @@ async def test_cache_invalidation_end_to_end(redis_client):
     assert mgr_before is not None
 
     # 2. Trigger invalidation event for Employee only
-    event_payload = json.dumps({
-        "event": "INGESTION_COMPLETED",
-        "run_id": "batch-101",
-        "affected_roles": ["Employee"],
-        "timestamp": "2026-09-29T00:00:00Z"
-    })
+    event_payload = json.dumps(
+        {
+            "event": "INGESTION_COMPLETED",
+            "run_id": "batch-101",
+            "affected_roles": ["Employee"],
+            "timestamp": "2026-09-29T00:00:00Z",
+        }
+    )
     purged_roles = await sub.handle_invalidation_payload(event_payload)
     assert purged_roles == ["Employee"]
 
@@ -110,6 +114,7 @@ async def test_cache_invalidation_end_to_end(redis_client):
     assert emp_after is None, "Employee cache key was not purged!"
     assert mgr_after is not None, "Manager cache key was incorrectly purged!"
     assert mgr_after.answer == "25 days"
+
 
 @pytest.mark.asyncio
 async def test_client_ping_and_lifecycle(redis_client):

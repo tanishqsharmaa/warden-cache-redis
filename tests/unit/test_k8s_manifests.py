@@ -14,6 +14,7 @@ def test_redis_configmap_directives():
     assert "appendonly yes" in data
     assert "appendfsync everysec" in data
 
+
 def test_redis_statefulset_spec():
     sts_path = Path("k8s/redis/redis-statefulset.yaml")
     assert sts_path.exists(), "redis-statefulset.yaml missing"
@@ -24,6 +25,7 @@ def test_redis_statefulset_spec():
     assert container["image"] == "redis:7.2.4-alpine"
     pvc = sts["spec"]["volumeClaimTemplates"][0]
     assert pvc["spec"]["resources"]["requests"]["storage"] == "5Gi"
+
 
 def test_sentinel_deployment_spec():
     sentinel_path = Path("k8s/redis/sentinel-deployment.yaml")

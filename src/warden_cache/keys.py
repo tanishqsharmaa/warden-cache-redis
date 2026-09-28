@@ -2,6 +2,7 @@
 
 Denormalized from ARCHITECTURE_SPECIFICATION.md § 3.5.1 and Docs/warden-cache-redis.md § 3.4.
 """
+
 import hashlib
 import re
 import unicodedata

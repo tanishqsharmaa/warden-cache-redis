@@ -2,6 +2,7 @@
 
 Denormalized from ARCHITECTURE_SPECIFICATION.md § 3.5.2 and Docs/warden-cache-redis.md § 3.4 & § 3.5.
 """
+
 import math
 import random
 import time

@@ -2,6 +2,7 @@
 
 Denormalized from ARCHITECTURE_SPECIFICATION.md § 3.5, § 4.3.1 and Docs/warden-cache-redis.md § 3.3.
 """
+
 import asyncio
 import logging
 import time
@@ -198,7 +199,9 @@ class WardenCacheClient:
             self.cache_error_count += 1
             logger.warning(
                 "Redis cache write error for key '%s': %s",
-                format_query_cache_key(role, query) if role in ("Employee", "Manager", "HR-Admin") else "unknown",
+                format_query_cache_key(role, query)
+                if role in ("Employee", "Manager", "HR-Admin")
+                else "unknown",
                 exc,
             )
 

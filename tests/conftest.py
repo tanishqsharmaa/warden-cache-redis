@@ -1,4 +1,5 @@
 """Pytest shared test fixtures for warden-cache-redis."""
+
 import os
 
 import fakeredis.aioredis as fake_aioredis

@@ -18,6 +18,7 @@ async def test_acquire_lock_success():
     assert kwargs.get("nx") is True
     assert kwargs.get("px") == 5000
 
+
 @pytest.mark.asyncio
 async def test_acquire_lock_contended():
     mock_redis = AsyncMock()
@@ -26,6 +27,7 @@ async def test_acquire_lock_contended():
 
     acquired = await coord.acquire_lock("Employee", "PTO", "worker-2", ttl_ms=5000)
     assert acquired is False
+
 
 @pytest.mark.asyncio
 async def test_atomic_release_lock_lua_script():
@@ -38,6 +40,7 @@ async def test_atomic_release_lock_lua_script():
     assert released is True
     mock_redis.eval.assert_awaited_once()
 
+
 @pytest.mark.asyncio
 async def test_atomic_release_lock_wrong_uuid():
     mock_redis = AsyncMock()
@@ -46,6 +49,7 @@ async def test_atomic_release_lock_wrong_uuid():
 
     released = await coord.release_lock("Employee", "PTO", "worker-1")
     assert released is False
+
 
 @pytest.mark.asyncio
 async def test_notify_waiters():
@@ -56,6 +60,7 @@ async def test_notify_waiters():
     listeners = await coord.notify_waiters("Employee", "PTO", "18 days.")
     assert listeners == 3
     mock_redis.publish.assert_awaited_once()
+
 
 @pytest.mark.asyncio
 async def test_wait_for_result_receives_message():
@@ -72,6 +77,7 @@ async def test_wait_for_result_receives_message():
     coord = SingleFlightCoordinator(mock_redis)
     res = await coord.wait_for_result("Employee", "PTO", timeout_sec=1.0)
     assert res == '{"answer": "published result"}'
+
 
 @pytest.mark.asyncio
 async def test_wait_for_result_fallback_check():

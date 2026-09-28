@@ -2,6 +2,7 @@
 
 Denormalized from ARCHITECTURE_SPECIFICATION.md § 3.5.4 and Docs/warden-cache-redis.md § 3.6.
 """
+
 import asyncio
 import json
 import logging
@@ -70,19 +71,30 @@ class CacheInvalidationSubscriber:
         try:
             data = json.loads(payload_str)
         except Exception as exc:
-            logger.warning("Received unparseable JSON on topic '%s': %s (data: %r)", self.topic, exc, payload_str)
+            logger.warning(
+                "Received unparseable JSON on topic '%s': %s (data: %r)",
+                self.topic,
+                exc,
+                payload_str,
+            )
             return []
 
         if not isinstance(data, dict):
-            logger.warning("Invalid payload structure on topic '%s' (expected dict): %r", self.topic, data)
+            logger.warning(
+                "Invalid payload structure on topic '%s' (expected dict): %r", self.topic, data
+            )
             return []
 
         raw_roles = data.get("affected_roles")
         if not isinstance(raw_roles, list) or not raw_roles:
-            logger.warning("Payload on topic '%s' missing or has empty 'affected_roles': %r", self.topic, data)
+            logger.warning(
+                "Payload on topic '%s' missing or has empty 'affected_roles': %r", self.topic, data
+            )
             return []
 
-        valid_roles_to_purge = [r for r in raw_roles if isinstance(r, str) and r in VALID_ROLE_TIERS]
+        valid_roles_to_purge = [
+            r for r in raw_roles if isinstance(r, str) and r in VALID_ROLE_TIERS
+        ]
         if not valid_roles_to_purge:
             logger.warning("No valid roles found in affected_roles: %r", raw_roles)
             return []
@@ -121,6 +133,8 @@ class CacheInvalidationSubscriber:
                         if isinstance(data, (str, bytes)):
                             text_data = data.decode("utf-8") if isinstance(data, bytes) else data
                             await self.handle_invalidation_payload(text_data)
+                    else:
+                        await asyncio.sleep(0.02)
                 except asyncio.CancelledError:
                     break
                 except Exception as exc:

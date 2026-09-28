@@ -28,6 +28,7 @@ async def test_client_get_cache_hit_and_miss():
     assert result.answer == "18 days"
     assert should_refresh is False
 
+
 @pytest.mark.asyncio
 async def test_client_get_cache_miss():
     mock_redis = AsyncMock()
@@ -37,6 +38,7 @@ async def test_client_get_cache_miss():
     result, should_refresh = await client.get("Employee", "Uncached query")
     assert result is None
     assert should_refresh is False
+
 
 @pytest.mark.asyncio
 async def test_client_set_serializes_envelope():
@@ -64,6 +66,7 @@ async def test_client_set_serializes_envelope():
     assert envelope.answer == "Up to $50,000."
     assert envelope.delta_t_seconds == 0.65
 
+
 @pytest.mark.asyncio
 async def test_client_fail_open_on_redis_error():
     # Review Focus 4: Fail open on Redis connection/timeout error
@@ -75,6 +78,7 @@ async def test_client_fail_open_on_redis_error():
     # Must fail open gracefully without raising
     assert result is None
     assert should_refresh is False
+
 
 @pytest.mark.asyncio
 async def test_client_set_fail_open_on_redis_error():
@@ -90,3 +94,35 @@ async def test_client_set_fail_open_on_redis_error():
         delta_t=0.1,
     )
     assert client.cache_error_count == 1
+
+
+@pytest.mark.asyncio
+async def test_client_ping_failure():
+    mock_redis = AsyncMock()
+    mock_redis.ping.side_effect = ConnectionError("Redis down")
+
+    client = WardenCacheClient(redis_client=mock_redis)
+    assert await client.ping() is False
+    assert client.cache_error_count == 1
+
+
+@pytest.mark.asyncio
+async def test_client_properties_uninitialized_raises():
+    client = WardenCacheClient()
+    with pytest.raises(RuntimeError, match="Redis client not initialized"):
+        _ = client.singleflight
+
+    with pytest.raises(RuntimeError, match="Redis client not initialized"):
+        _ = client.invalidation
+
+
+@pytest.mark.asyncio
+async def test_client_close_owned_client():
+    mock_redis = AsyncMock()
+    client = WardenCacheClient()
+    client._redis = mock_redis
+    client._own_client = True
+
+    await client.close()
+    mock_redis.aclose.assert_awaited_once()
+    assert client._redis is None
