@@ -1,4 +1,5 @@
 """Warden Cache Redis Package - Tier 1 Distributed Cache Engine."""
+from .client import WardenCacheClient
 from .invalidation import (
     CacheInvalidationSubscriber,
     INVALIDATION_TOPIC,
@@ -33,4 +34,5 @@ __all__ = [
     "UNLOCK_LUA_SCRIPT",
     "CacheInvalidationSubscriber",
     "INVALIDATION_TOPIC",
+    "WardenCacheClient",
 ]
