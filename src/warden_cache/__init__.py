@@ -1,4 +1,8 @@
 """Warden Cache Redis Package - Tier 1 Distributed Cache Engine."""
+from .invalidation import (
+    CacheInvalidationSubscriber,
+    INVALIDATION_TOPIC,
+)
 from .keys import (
     VALID_ROLE_TIERS,
     format_lock_key,
@@ -27,4 +31,6 @@ __all__ = [
     "CacheEnvelope",
     "SingleFlightCoordinator",
     "UNLOCK_LUA_SCRIPT",
+    "CacheInvalidationSubscriber",
+    "INVALIDATION_TOPIC",
 ]
