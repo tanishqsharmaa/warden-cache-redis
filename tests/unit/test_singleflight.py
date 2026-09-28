@@ -1,6 +1,9 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
 from warden_cache.singleflight import SingleFlightCoordinator
+
 
 @pytest.mark.asyncio
 async def test_acquire_lock_success():

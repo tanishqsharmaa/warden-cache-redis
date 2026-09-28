@@ -1,6 +1,9 @@
 import time
+
 import pytest
-from warden_cache.xfetch import compute_xfetch_delta, should_refresh_early, CacheEnvelope
+
+from warden_cache.xfetch import CacheEnvelope, compute_xfetch_delta, should_refresh_early
+
 
 def test_xfetch_delta_computation_deterministic():
     # If delta_t = 1.0, beta = 1.0, u_rand = 0.5: delta = -1.0 * 1.0 * ln(0.5) ≈ 0.693147

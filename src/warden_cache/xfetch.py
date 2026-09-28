@@ -9,8 +9,6 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from .keys import VALID_ROLE_TIERS
-
 
 def compute_xfetch_delta(
     delta_t: float,

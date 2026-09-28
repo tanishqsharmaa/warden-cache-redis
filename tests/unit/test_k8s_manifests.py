@@ -1,5 +1,7 @@
-import yaml
 from pathlib import Path
+
+import yaml
+
 
 def test_redis_configmap_directives():
     config_path = Path("k8s/redis/redis-configmap.yaml")

@@ -1,9 +1,12 @@
 import asyncio
 import json
+
 import pytest
+
 from warden_cache.client import WardenCacheClient
-from warden_cache.singleflight import SingleFlightCoordinator
 from warden_cache.invalidation import CacheInvalidationSubscriber
+from warden_cache.singleflight import SingleFlightCoordinator
+
 
 @pytest.mark.asyncio
 async def test_thundering_herd_simulation_50_workers(redis_client):

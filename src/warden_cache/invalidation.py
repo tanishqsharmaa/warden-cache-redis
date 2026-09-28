@@ -5,7 +5,6 @@ Denormalized from ARCHITECTURE_SPECIFICATION.md § 3.5.4 and Docs/warden-cache-r
 import asyncio
 import json
 import logging
-from typing import Any
 
 import redis.asyncio as aioredis
 
@@ -130,7 +129,7 @@ class CacheInvalidationSubscriber:
         finally:
             try:
                 await pubsub.unsubscribe(self.topic)
-                await pubsub.aclose()
+                await pubsub.aclose()  # type: ignore[no-untyped-call]
             except Exception:
                 pass
             logger.info("Unsubscribed from cache invalidation topic '%s'", self.topic)

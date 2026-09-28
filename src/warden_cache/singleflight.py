@@ -5,7 +5,6 @@ Denormalized from ARCHITECTURE_SPECIFICATION.md § 3.5.3 and Docs/warden-cache-r
 import asyncio
 import logging
 import time
-from typing import Any
 
 import redis.asyncio as aioredis
 
@@ -158,6 +157,6 @@ class SingleFlightCoordinator:
         finally:
             try:
                 await pubsub.unsubscribe(chan)
-                await pubsub.aclose()
+                await pubsub.aclose()  # type: ignore[no-untyped-call]
             except Exception:
                 pass

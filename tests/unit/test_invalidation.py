@@ -1,8 +1,10 @@
-import asyncio
 import json
+from unittest.mock import AsyncMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+
 from warden_cache.invalidation import CacheInvalidationSubscriber
+
 
 @pytest.mark.asyncio
 async def test_purge_role_keys_uses_scan_and_unlink():

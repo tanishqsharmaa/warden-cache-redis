@@ -1,11 +1,13 @@
 import pytest
+
 from warden_cache.keys import (
-    normalize_query,
-    format_query_cache_key,
+    VALID_ROLE_TIERS,
     format_lock_key,
     format_pubsub_channel,
-    VALID_ROLE_TIERS,
+    format_query_cache_key,
+    normalize_query,
 )
+
 
 def test_query_normalization_whitespace_and_unicode():
     raw = "   How \t much \n PTO do I get?   "

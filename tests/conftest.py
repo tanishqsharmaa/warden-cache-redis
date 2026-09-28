@@ -1,9 +1,9 @@
 """Pytest shared test fixtures for warden-cache-redis."""
 import os
-import pytest
+
+import fakeredis.aioredis as fake_aioredis
 import pytest_asyncio
 import redis.asyncio as aioredis
-import fakeredis.aioredis as fake_aioredis
 
 
 @pytest_asyncio.fixture
@@ -21,11 +21,9 @@ async def redis_client():
         socket_connect_timeout=0.2,
         decode_responses=True,
     )
-    
-    is_live = False
+
     try:
         await real_client.ping()
-        is_live = True
         client = real_client
     except Exception:
         await real_client.aclose()
