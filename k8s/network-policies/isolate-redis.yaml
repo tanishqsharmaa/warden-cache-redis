@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: isolate-redis-cache
+  namespace: warden-storage
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: warden-apps
+      podSelector:
+        matchExpressions:
+        - key: app
+          operator: In
+          values: ["warden-orchestrator", "warden-retrieval", "warden-ingestion"]
+    ports:
+    - protocol: TCP
+      port: 6379 # Redis RESP3
+  egress: [] # Redis initiates zero outbound network traffic
