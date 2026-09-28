@@ -124,10 +124,59 @@ The automated test suite covers all units and integration paths:
 |---|---|---|
 | `test_k8s_manifests.py` | 3 | Validates Redis 512MB LRU, AOF persistence, Sentinel spec |
 | `test_network_policy.py` | 1 | Verifies port 6379 restricted to orchestrator, retrieval, ingestion |
-| `test_cache_keys.py` | 5 | Tests normalization, role partitioning, SHA-256 formatting |
-| `test_xfetch.py` | 4 | Tests mathematical XFetch formula, clamping, CacheEnvelope |
+| `test_cache_keys.py` | 7 | Tests normalization (NFKC, ligatures), role partitioning, SHA-256 |
+| `test_xfetch.py` | 4 | Tests mathematical XFetch formula, boundary clamping, CacheEnvelope |
 | `test_singleflight.py` | 7 | Tests SET NX PX, atomic Lua unlock, Pub/Sub waiting channels |
-| `test_invalidation.py` | 5 | Tests non-blocking SCAN + UNLINK and malformed payload safety |
-| `test_client.py` | 5 | Tests unified client, Sentinel config, and fail-open resilience |
+| `test_invalidation.py` | 6 | Tests non-blocking SCAN + UNLINK, loop lifecycle, malformed payload safety |
+| `test_client.py` | 8 | Tests unified client, Sentinel config, lifecycle, and fail-open resilience |
 | `test_redis_integration.py`| 4 | 50-worker thundering herd simulation, failover, live lifecycle |
-| **Total** | **34** | **100% Passing** |
+| **Total** | **40** | **100% Passing** |
+
+---
+
+## 6. Session Handoff & Platform Engineering Context
+
+### 6.1 Status & Delivery State
+- **Tier Classification**: Tier 1 (`warden-cache-redis`) — **100% COMPLETE & HARDENED**
+- **Test Suite**: 40 passed (0 failures, 0 skipped) across unit and integration suites in 1.42s.
+- **Static Analysis**: Zero lint errors (`ruff check`), strict type checking passed across all source files (`mypy --strict`).
+- **Workspace Hygiene**: Clean working tree. Transient caches, build outputs, `.superpowers`, and documentation are guarded by `.gitignore`.
+- **Master Build Sequence Gate**: Satisfies the caching half of **GATE-1** (`BUILD_SEQUENCE.md` § 4).
+
+### 6.2 Key Architectural Decisions & Invariants
+1. **MANDATE-01 (Database-Per-Service Isolation)**: Persistence boundaries are absolute. Redis operates purely as an ephemeral L2 cache and synchronization engine. It holds zero permanent document metadata or primary vector indices.
+2. **MANDATE-03 (Early-Binding ACL Key Namespacing)**: `format_query_cache_key` strictly enforces `cache:query:{role_tier}:{sha256(normalize(query_text))}`. An `Employee` request can mathematically never hit a `Manager` or `HR-Admin` cache entry.
+3. **Thundering Herd Elimination (XFetch & SingleFlight)**:
+   - Early background refresh is governed by $\Delta = -\beta \cdot \delta \cdot \ln(U)$, where $U \in [10^{-10}, 1.0]$ and $\delta \ge 0.0$. Trigger rule: $(now + \Delta) > expiry$.
+   - Cache misses synchronize via distributed mutex (`SET ... NX PX 5000`) and release atomically using Lua script `UNLOCK_LUA_SCRIPT` to prevent lock-stealing race conditions.
+4. **Non-Blocking Cache Invalidation**: Subscribes to Redis topic `warden:cache:invalidate` and executes non-blocking `SCAN` in batches of 100 with asynchronous `UNLINK`, preventing single-threaded Redis event loop freezes.
+5. **Fail-Open Resilience**: On Redis connectivity or timeout errors, `WardenCacheClient` logs operational warnings, increments `cache_error_count`, and gracefully returns `(None, False)` so downstream services fall back to live retrieval without dropping requests.
+
+### 6.3 Downstream Consumption & Integration Points
+1. **`warden-orchestrator` (Tier 5)**:
+   - Queries `WardenCacheClient.get(role, query)`. On cache hit, returns answer within $<15\text{ms}$ (SLA: $<1.50\text{s}$).
+   - On cache miss, acquires SingleFlight mutex, computes answer via retrieval and Azure OpenAI, stores envelope via `client.set()`, and notifies waiters.
+2. **`warden-retrieval` (Tier 3)**:
+   - Interfaces with `SingleFlightCoordinator` to coordinate speculative reranking or cached candidate sets.
+3. **`warden-ingestion` (Tier 2)**:
+   - Publishes `{"event": "INGESTION_COMPLETED", "run_id": "...", "affected_roles": ["Employee", "Manager"]}` to `warden:cache:invalidate` upon completing batch indexing.
+
+### 6.4 Verification Quickstart for Incoming Engineers
+```bash
+# 1. Run complete automated test suite
+.venv\Scripts\pytest.exe tests/ -v
+
+# 2. Run static analysis and linting
+.venv\Scripts\ruff.exe check src/ tests/
+.venv\Scripts\mypy.exe src/
+
+# 3. Verify Kubernetes manifests syntax
+kubectl apply --dry-run=client -f k8s/redis/
+kubectl apply --dry-run=client -f k8s/network-policies/
+```
+
+### 6.5 Next Build Phase (Tier 2: Document Ingestion Subsystem)
+Per `Docs/BUILD_SEQUENCE.md`, with Tier 0 (`warden-shared`) and Tier 1 (`warden-infra`, `warden-cache-redis`) complete:
+- **Next Target**: **Tier 2 (`warden-ingestion`)**
+  - Scope: SQLite WAL idempotency ledger manager (`ingestion.db`), multiprocess Presidio PII scrubbing pool (`ProcessPoolExecutor`, 4 workers), table-aware recursive 512-token chunking with bounded queue (`asyncio.Queue(maxsize=256)`), batched INT8 ONNX Runtime vectorizer for `BAAI/bge-base-en-v1.5`, streaming gRPC client for `RetrievalService.IndexBatch`, and Redis invalidation publishing to `warden:cache:invalidate`.
+  - Integration Gate: **GATE-2** (`pytest tests/integration/test_ingestion_pipeline.py -m "pii and wal"`).
