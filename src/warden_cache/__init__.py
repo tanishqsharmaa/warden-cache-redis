@@ -6,6 +6,11 @@ from .keys import (
     format_query_cache_key,
     normalize_query,
 )
+from .xfetch import (
+    CacheEnvelope,
+    compute_xfetch_delta,
+    should_refresh_early,
+)
 
 __all__ = [
     "VALID_ROLE_TIERS",
@@ -13,4 +18,7 @@ __all__ = [
     "format_query_cache_key",
     "format_lock_key",
     "format_pubsub_channel",
+    "compute_xfetch_delta",
+    "should_refresh_early",
+    "CacheEnvelope",
 ]
